@@ -1,16 +1,41 @@
 import { Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as apigateway from 'aws-cdk-lib/aws-apigateway';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
 
 export class BackendStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    // The code that defines your stack goes here
+    const dialogflowFunc = new lambda.Function(this, 'DialogflowFunc', {
+      runtime: lambda.Runtime.NODEJS_14_X,
+      code: lambda.Code.fromAsset('lambda'),
+      handler: 'dialogflow.handler',
+    });
 
-    // example resource
-    // const queue = new sqs.Queue(this, 'BackendQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
+    const api = new apigateway.RestApi(this, 'api', {
+      restApiName: 'backend',
+      cloudWatchRole: false,
+      defaultCorsPreflightOptions: {
+        allowOrigins: apigateway.Cors.ALL_ORIGINS,
+        allowMethods: apigateway.Cors.ALL_METHODS,
+        statusCode: 200,
+      },
+    });
+
+    api.root.addMethod(
+      'POST',
+      new apigateway.LambdaIntegration(dialogflowFunc),
+      {
+        methodResponses: [
+          {
+            statusCode: '200',
+            responseModels: {
+              'application/json; charset=UTF-8': apigateway.Model.EMPTY_MODEL,
+            },
+          },
+        ],
+      }
+    );
   }
 }
