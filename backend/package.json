@@ -10,7 +10,7 @@
     "test": "jest",
     "cdk": "cdk",
     "predeploy": "npm run build",
-    "deploy": "cdk deploy --hotswap"
+    "deploy": "cdk deploy"
   },
   "devDependencies": {
     "@types/jest": "^26.0.10",
